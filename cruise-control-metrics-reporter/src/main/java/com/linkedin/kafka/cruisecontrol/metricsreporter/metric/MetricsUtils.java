@@ -32,10 +32,37 @@ public class MetricsUtils {
   private static final String SIZE = "Size";
   private static final String REQUEST_HANDLER_AVG_IDLE_PERCENT = "RequestHandlerAvgIdlePercent";
   private static final String LOG_FLUSH_RATE_AND_TIME_MS = "LogFlushRateAndTimeMs";
+  // Connector Related
+  private static final String BATCH_SIZE_AVG = "batch-size-avg";
+  private static final String BATCH_SIZE_MAX = "batch-size-max";
+  private static final String OFFSET_COMMIT_FAILURE_PERCENTAGE = "offset-commit-failure-percentage";
+  private static final String OFFSET_COMMIT_MAX_TIME_MS = "offset-commit-max-time-ms";
+  private static final String RUNNING_RATIO = "running-ratio";
+  private static final String OFFSET_COMMIT_SKIP_RATE = "offset-commit-skip-rate";
+  private static final String PARTITION_COUNT = "partition-count";
+  private static final String PUT_BTACH_AVG_TIME_MS = "put-batch-avg-time-ms";
+  private static final String PUT_BTACH_MAX_TIME_MS = "put-batch-max-time-ms";
+  private static final String SINK_RECORD_ACTIVE_COUNT = "sink-record-active-count";
+  private static final String SINK_RECORD_ACTIVE_COUNT_MAX = "sink-record-active-count-max";
+  private static final String SINK_RECORD_LOG_MAX = "sink-record-lag-max";
+  private static final String SINK_RECORD_READ_RATE = "sink-record-read-rate";
+  private static final String SINK_RECORD_SEND_RATE = "sink-record-send-rate";
+  private static final String DEADLETTERQUEUE_PRODUCE_FAILURES = "deadletterqueue-produce-failures";
+  private static final String DEADLETTERQUEUE_PRODUCE_REQUESTS = "deadletterqueue-produce-requests";
+  private static final String LAST_ERROR_TIMESTAMP = "last-error-timestamp";
+  private static final String TOTAL_ERRORS_LOGGED = "total-errors-logged";
+  private static final String TOTAL_RECORD_ERRORS = "total-record-errors";
+  private static final String TOTAL_RECORD_FAILURES = "total-record-failures";
+  private static final String TOTAL_RECORD_SKIPPED = "total-records-skipped";
+  private static final String TOTAL_RETRIES = "total-retries";
+
   // Groups
   private static final String KAFKA_SERVER = "kafka.server";
   private static final String KAFKA_LOG = "kafka.log";
   private static final String KAFKA_NETWORK = "kafka.network";
+  private static final String CONNECTOR_TASK = "connector-task-metrics";
+  private static final String SINK_TASK = "sink-task-metrics";
+  private static final String TASK_ERROR = "task-error-metrics";
   // Type Keys
   private static final String TYPE_KEY = "type";
   private static final String TOPIC_KEY = "topic";
@@ -88,6 +115,34 @@ public class MetricsUtils {
       Collections.unmodifiableSet(new HashSet<>(Arrays.asList(CONSUMER_FETCH_REQUEST_TYPE,
                                                               FOLLOWER_FETCH_REQUEST_TYPE,
                                                               PRODUCE_REQUEST_TYPE)));
+
+  private static final Set<String> INTERESTED_CONNECTOR_TASK_METRIC_NAMES =
+      Collections.unmodifiableSet(new HashSet<>(Arrays.asList(BATCH_SIZE_AVG,
+                                                              BATCH_SIZE_MAX,
+                                                              OFFSET_COMMIT_FAILURE_PERCENTAGE,
+                                                              OFFSET_COMMIT_MAX_TIME_MS,
+                                                              RUNNING_RATIO)));
+
+  private static final Set<String> INTERESTED_SINK_TASK_METRIC_NAMES =
+      Collections.unmodifiableSet(new HashSet<>(Arrays.asList(OFFSET_COMMIT_SKIP_RATE,
+                                                              PARTITION_COUNT,
+                                                              PUT_BTACH_AVG_TIME_MS,
+                                                              PUT_BTACH_MAX_TIME_MS,
+                                                              SINK_RECORD_ACTIVE_COUNT,
+                                                              SINK_RECORD_ACTIVE_COUNT_MAX,
+                                                              SINK_RECORD_LOG_MAX,
+                                                              SINK_RECORD_READ_RATE,
+                                                              SINK_RECORD_SEND_RATE)));
+
+  private static final Set<String> INTERESTED_TASK_ERROR_METRIC_NAMES =
+      Collections.unmodifiableSet(new HashSet<>(Arrays.asList(DEADLETTERQUEUE_PRODUCE_FAILURES,
+                                                              DEADLETTERQUEUE_PRODUCE_REQUESTS,
+                                                              LAST_ERROR_TIMESTAMP,
+                                                              TOTAL_ERRORS_LOGGED,
+                                                              TOTAL_RECORD_ERRORS,
+                                                              TOTAL_RECORD_FAILURES,
+                                                              TOTAL_RECORD_SKIPPED,
+                                                              TOTAL_RETRIES)));
 
   private MetricsUtils() {
 
@@ -160,6 +215,22 @@ public class MetricsUtils {
     String name = metricName.name();
     String type = metricName.tags().get(TYPE_KEY);
     return isInterested(group, name, type, metricName.tags());
+  }
+
+  /**
+   * Check if a kafkaMetric is an interested metric.
+   */
+  public static boolean isConnectInterested(org.apache.kafka.common.MetricName metricName) {
+    String group = metricName.group();
+    String name = metricName.name();
+    if (group.equals(CONNECTOR_TASK)) {
+      return INTERESTED_CONNECTOR_TASK_METRIC_NAMES.contains(name);
+    } else if (group.equals(SINK_TASK)) {
+      return INTERESTED_SINK_TASK_METRIC_NAMES.contains(name);
+    } else if (group.equals(TASK_ERROR)) {
+      return INTERESTED_TASK_ERROR_METRIC_NAMES.contains(name);
+    }
+    return false;
   }
 
   /**
